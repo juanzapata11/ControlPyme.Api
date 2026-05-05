@@ -1,0 +1,6 @@
+@ControlPyme.Api_HostAddress = http://localhost:5095
+
+GET {{ControlPyme.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
