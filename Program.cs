@@ -26,7 +26,7 @@ if (!string.IsNullOrEmpty(port))
 }
 
 /* 
-var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
+var port = Environment.GetEnvironmentVariable("PORT") ?? "10000"; 
 app.Urls.Add($"http://*:{port}");
 */
 
