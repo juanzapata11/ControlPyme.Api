@@ -69,12 +69,18 @@ app.Urls.Add($"http://*:{port}");
 
 
 // Configure the HTTP request pipeline.
-
+/*
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+*/
+app.UseSwagger();
+app.UseSwaggerUI(c => {
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Mi API V1");
+    c.RoutePrefix = string.Empty; // Esto hace que Swagger cargue en la raíz (/)
+});
 
 app.UseAuthorization();
 
