@@ -1,16 +1,12 @@
 using ControlPyme.Api.Data;
 using Microsoft.EntityFrameworkCore;
 
-
 var builder = WebApplication.CreateBuilder(args);
-
-
 
 // Add services to the container.
 // DB
 /*
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 */
 
 //var envConnection = Environment.GetEnvironmentVariable("DB_CONNECTION");
@@ -43,9 +39,9 @@ var connectionString =
     ?? builder.Configuration.GetConnectionString("DefaultConnection");
 
 Console.WriteLine(connectionString);
-*/
-//builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
 
+//builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
+*/
 
 if (string.IsNullOrEmpty(connectionString))
 {
@@ -69,15 +65,12 @@ if (!string.IsNullOrEmpty(port))
     app.Urls.Add($"http://*:{port}");
 }
 
-
 /* 
 var port = Environment.GetEnvironmentVariable("PORT") ?? "10000"; 
 app.Urls.Add($"http://*:{port}");
 */
 
-
 // Configure the HTTP request pipeline.
-
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
