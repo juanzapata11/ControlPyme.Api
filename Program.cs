@@ -13,8 +13,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 */
 
-var envConnection = Environment.GetEnvironmentVariable("DB_CONNECTION");
-var configConnection = builder.Configuration.GetConnectionString("DefaultConnection");
+//var envConnection = Environment.GetEnvironmentVariable("DB_CONNECTION");
+//var configConnection = builder.Configuration.GetConnectionString("DefaultConnection");
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
@@ -29,12 +29,11 @@ Console.WriteLine(configConnection);
 
 Console.WriteLine("FINAL:");
 Console.WriteLine(connectionString);
-*/
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(connectionString));
+
+//builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
 
 //var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-/*
+
 if (string.IsNullOrEmpty(connectionString))
 {
     throw new Exception("¡La cadena de conexión no se encontró en los secretos!");
@@ -45,8 +44,16 @@ var connectionString =
 
 Console.WriteLine(connectionString);
 */
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(connectionString));
+//builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
+
+
+if (string.IsNullOrEmpty(connectionString))
+{
+    Console.WriteLine("DEBUG: No encuentro la cadena. Revisando fuentes...");
+    // Esto te dirá qué está leyendo .NET realmente
+    var debugValue = builder.Configuration["ConnectionStrings:DefaultConnection"];
+    Console.WriteLine($"DEBUG Directo: {debugValue}");
+}
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -62,6 +69,7 @@ if (!string.IsNullOrEmpty(port))
     app.Urls.Add($"http://*:{port}");
 }
 
+
 /* 
 var port = Environment.GetEnvironmentVariable("PORT") ?? "10000"; 
 app.Urls.Add($"http://*:{port}");
@@ -69,13 +77,13 @@ app.Urls.Add($"http://*:{port}");
 
 
 // Configure the HTTP request pipeline.
-/*
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-*/
+
 app.UseSwagger();
 app.UseSwaggerUI(c => {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Mi API V1");
