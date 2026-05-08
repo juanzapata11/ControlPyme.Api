@@ -18,7 +18,7 @@ var configConnection = builder.Configuration.GetConnectionString("DefaultConnect
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
-
+/*
 Console.WriteLine("ENV:");
 Console.WriteLine(envConnection);
 
@@ -29,18 +29,16 @@ Console.WriteLine(configConnection);
 
 Console.WriteLine("FINAL:");
 Console.WriteLine(connectionString);
-
+*/
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connectionString));
 
 //var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
+/*
 if (string.IsNullOrEmpty(connectionString))
 {
     throw new Exception("¡La cadena de conexión no se encontró en los secretos!");
 }
-
-/*
 var connectionString =
     Environment.GetEnvironmentVariable("DB_CONNECTION")
     ?? builder.Configuration.GetConnectionString("DefaultConnection");
