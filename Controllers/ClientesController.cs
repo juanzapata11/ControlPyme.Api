@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using ControlPyme.Api.Data;
 using ControlPyme.Api.Models;
-
+//
 namespace ControlPyme.Api.Controllers
 {
     [ApiController]
