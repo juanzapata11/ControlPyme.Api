@@ -35,7 +35,7 @@ public class AuthController : ControllerBase
 
         using var conexion = new SqlConnection(_connectionString);
 
-        // 2. ¡AQUÍ ESTÁ TU MODIFICACIÓN DE BASE DE DATOS!
+        
         // Usamos parámetros (@Username) por seguridad estricta contra SQL Injection
         string sql = "SELECT * FROM Usuarios WHERE Username = @Username";
 
