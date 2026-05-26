@@ -39,7 +39,7 @@ public class AuthController : ControllerBase
         // Usamos parámetros (@Username) por seguridad estricta contra SQL Injection
         string sql = "SELECT * FROM Usuarios WHERE Username = @Username";
 
-        // Ejecutamos la consulta usando Dapper mapeándolo a una clase interna o dinámica
+        
         var usuarioDb = await conexion.QueryFirstOrDefaultAsync<dynamic>(sql, new { Username = request.Usuario });
 
         // 3. Si el usuario no existe en la base de datos
