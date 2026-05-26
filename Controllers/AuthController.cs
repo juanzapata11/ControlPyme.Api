@@ -28,8 +28,6 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] ControlPyme.Shared.Models.LoginRequest request)
     {
-        
-        // 1. Validar que no vengan vacíos
         if (string.IsNullOrEmpty(request.Usuario) || string.IsNullOrEmpty(request.Password))
         {
             return BadRequest(new LoginResponse { Exito = false, Mensaje = "Campos obligatorios." });
