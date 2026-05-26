@@ -58,7 +58,7 @@ namespace ControlPyme.Api.Controllers
             if (clienteExistente == null)
                 return NotFound();
 
-            clienteExistente.Nombre = cliente.Nombre;
+            clienteExistente.NombreCompleto = cliente.NombreCompleto;
             clienteExistente.Telefono = cliente.Telefono;
 
             await _context.SaveChangesAsync();
