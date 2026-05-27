@@ -5,9 +5,8 @@ WORKDIR /app
 # Copiamos todo el contenido del repositorio
 COPY . ./
 
-# 👇 CAMBIO CLAVE: Publicamos apuntando directamente al archivo .csproj
-# (Si tu archivo .csproj está en la raíz, quita "ControlPyme.Api/")
-RUN dotnet publish ControlPyme.Api/ControlPyme.Api.csproj -c Release -o /app/out
+# 👇 SOLUCIÓN: Buscamos cualquier archivo .csproj que represente a la API de forma dinámica
+RUN dotnet publish **/ControlPyme.Api.csproj -c Release -o /app/out
 
 # Etapa de ejecución
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
