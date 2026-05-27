@@ -60,6 +60,8 @@ namespace ControlPyme.Api.Controllers
 
             clienteExistente.NombreCompleto = cliente.NombreCompleto;
             clienteExistente.Telefono = cliente.Telefono;
+            clienteExistente.Celular = cliente.Celular;
+            clienteExistente.Ciudad = cliente.Ciudad;
 
             await _context.SaveChangesAsync();
 
