@@ -1,6 +1,5 @@
 ﻿namespace ControlPyme.Api.Models;
 
-// Lo que la App le envía a la API
 public class LoginRequest
 {
     public string Usuario { get; set; } = string.Empty;
