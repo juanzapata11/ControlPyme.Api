@@ -1,4 +1,4 @@
-﻿using ControlPyme.Shared.Models;
+﻿
 using Dapper;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
@@ -26,11 +26,11 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] ControlPyme.Shared.Models.LoginRequest request)
+    public async Task<IActionResult> Login([FromBody] ControlPyme.Api.Models.LoginRequest request)
     {
         if (string.IsNullOrEmpty(request.Usuario) || string.IsNullOrEmpty(request.Password))
         {
-            return BadRequest(new LoginResponse { Exito = false, Mensaje = "Campos obligatorios." });
+            return BadRequest(new ControlPyme.Api.Models.LoginResponse { Exito = false, Mensaje = "Campos obligatorios." });
         }
 
         using var conexion = new SqlConnection(_connectionString);
@@ -42,7 +42,7 @@ public class AuthController : ControllerBase
 
         if (usuarioDb == null)
         {
-            return Unauthorized(new LoginResponse { Exito = false, Mensaje = "Usuario o contraseña incorrectos." });
+            return Unauthorized(new ControlPyme.Api.Models.LoginResponse { Exito = false, Mensaje = "Usuario o contraseña incorrectos." });
         }
 
         // 4. Verificar si la contraseña coincide con el Hash seguro de la base de datos
@@ -54,13 +54,13 @@ public class AuthController : ControllerBase
 
         if (!passwordValida)
         {
-            return Unauthorized(new LoginResponse { Exito = false, Mensaje = "Usuario o contraseña incorrectos." });
+            return Unauthorized(new ControlPyme.Api.Models.LoginResponse { Exito = false, Mensaje = "Usuario o contraseña incorrectos." });
         }
 
         // 5. Si todo está OK, generamos el Token JWT firmado para MAUI
         string tokenGenerado = GenerarJwtToken(usuarioDb);
 
-        return Ok(new LoginResponse
+        return Ok(new ControlPyme.Api.Models.LoginResponse
         {
             Exito = true,
             Mensaje = "¡Bienvenido!",

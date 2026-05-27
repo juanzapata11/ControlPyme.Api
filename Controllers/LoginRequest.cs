@@ -1,4 +1,4 @@
-﻿namespace ControlPyme.Shared.Models;
+﻿namespace ControlPyme.Api.Models;
 
 // Lo que la App le envía a la API
 public class LoginRequest
