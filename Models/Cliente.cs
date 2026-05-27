@@ -15,5 +15,5 @@
         public string? DirCobro { get; set; }
         public string? BarrioCobro { get; set; }
         public string? NotasGenerales { get; set; }
-    }
+    }//
 }
