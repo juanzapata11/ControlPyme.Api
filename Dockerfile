@@ -2,14 +2,12 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-
+# 1. Copiamos todas las carpetas del repositorio al contenedor
 COPY . .
-COPY ControlPyme.Shared/ControlPyme.Shared.csproj ControlPyme.Shared/
 
-
+# 2. Compilamos la API apuntando a su carpeta correspondiente
+# Al estar en la raíz, preservamos el mapa para encontrar ../ControlPyme.Shared
 RUN dotnet publish ControlPyme.Api/ControlPyme.Api.csproj -c Release -o /app/out
-
-COPY ControlPyme.Shared/ ControlPyme.Shared/
 
 # Etapa de ejecución
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
