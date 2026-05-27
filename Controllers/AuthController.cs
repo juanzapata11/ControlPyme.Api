@@ -35,21 +35,22 @@ public class AuthController : ControllerBase
 
         using var conexion = new SqlConnection(_connectionString);
 
-        
-        // Usamos parámetros (@Username) por seguridad estricta contra SQL Injection
-        string sql = "SELECT * FROM Usuarios WHERE Username = @Username";
 
-        
-        var usuarioDb = await conexion.QueryFirstOrDefaultAsync<dynamic>(sql, new { Username = request.Usuario });
+        string sql = "SELECT Id AS Id, Username AS Username, PasswordHash AS PasswordHash, NombreCompleto AS NombreCompleto FROM Usuarios WHERE Username = @Username";
 
-        // 3. Si el usuario no existe en la base de datos
+        var usuarioDb = await conexion.QueryFirstOrDefaultAsync<UsuarioLogueado>(sql, new { Username = request.Usuario });
+
         if (usuarioDb == null)
         {
             return Unauthorized(new LoginResponse { Exito = false, Mensaje = "Usuario o contraseña incorrectos." });
         }
 
         // 4. Verificar si la contraseña coincide con el Hash seguro de la base de datos
-        bool passwordValida = BCrypt.Net.BCrypt.Verify(request.Password, usuarioDb.PasswordHash);
+        // LINEA TEMPORAL: Esto generará el Hash perfecto en tu consola de Visual Studio
+        string miHashFresco = BCrypt.Net.BCrypt.HashPassword("1234");
+        System.Diagnostics.Debug.WriteLine($"MI HASH REAL ES: {miHashFresco}");
+
+        bool passwordValida = BCrypt.Net.BCrypt.Verify(request.Password, usuarioDb.PasswordHash.Trim());
 
         if (!passwordValida)
         {
@@ -90,5 +91,12 @@ public class AuthController : ControllerBase
         );
 
         return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+    public class UsuarioLogueado
+    {
+        public int Id { get; set; }
+        public string Username { get; set; } = string.Empty;
+        public string PasswordHash { get; set; } = string.Empty;
+        public string NombreCompleto { get; set; } = string.Empty;
     }
 }
