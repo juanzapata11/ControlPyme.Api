@@ -21,7 +21,7 @@ public class AuthController : ControllerBase
     public AuthController(IConfiguration configuration)
     {
         _configuration = configuration;
-        // Leemos la cadena de conexión a tu base de datos (configurada en appsettings.json)
+        
         _connectionString = _configuration.GetConnectionString("DefaultConnection")!;
     }
 
