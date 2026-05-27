@@ -6,7 +6,7 @@ WORKDIR /app
 COPY . ./
 
 # 👇 SOLUCIÓN: Buscamos cualquier archivo .csproj que represente a la API de forma dinámica
-RUN dotnet publish **/ControlPyme.Api.csproj -c Release -o /app/out
+RUN dotnet publish *.csproj -c Release -o /app/out
 
 # Etapa de ejecución
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
