@@ -1,9 +1,12 @@
-﻿namespace ControlPyme.Api.Models
+﻿using System.Text.Json.Serialization;
+
+namespace ControlPyme.Api.Models
 {
     public class Cliente
     {
         public int Id { get; set; }
-        public string? NombreCompleto { get; set; }
+        [JsonPropertyName("NombreCompleto")]
+        public string NombreCompleto { get; set; } = string.Empty;
         public string? Telefono { get; set; }
         public string? TipoDocumento { get; set; }
         public string? NumeroDocumento { get; set; }
@@ -15,5 +18,6 @@
         public string? DirCobro { get; set; }
         public string? BarrioCobro { get; set; }
         public string? NotasGenerales { get; set; }
+        public int UsuarioId { get; set; }
     }
 }
