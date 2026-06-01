@@ -9,7 +9,6 @@
         public int StockActual { get; set; }
         public int StockMinimo { get; set; }
         public bool EsCreditoPermitido { get; set; } = true;
-        // Código de barras o SKU opcional para inventario
         public string CodigoBarras { get; set; } = string.Empty;
     }
 }
