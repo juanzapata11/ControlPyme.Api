@@ -48,24 +48,51 @@ namespace ControlPyme.Api.Controllers
 
         // PUT: api/clientes/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutCliente(int id, [FromBody] Cliente cliente)
+        public async Task<IActionResult> ActualizarCliente(int id, [FromBody] Cliente clienteEditado)
         {
-            if (id != cliente.Id)
-                return BadRequest();
+            if (id != clienteEditado.Id)
+            {
+                return BadRequest("El ID del cliente no coincide con la petición.");
+            }
 
-            var clienteExistente = await _context.Clientes.FindAsync(id);
+            // 1. Buscamos el registro real actual en la base de datos
+            var clienteDb = await _context.Clientes.FindAsync(id);
+            if (clienteDb == null)
+            {
+                return NotFound($"El cliente con ID {id} no existe.");
+            }
 
-            if (clienteExistente == null)
-                return NotFound();
+            // 2. Actualizamos TODOS los campos con lo que viene de MAUI
+            clienteDb.NombreCompleto = clienteEditado.NombreCompleto;
+            clienteDb.NumeroDocumento = clienteEditado.NumeroDocumento;
+            clienteDb.TipoDocumento = clienteEditado.TipoDocumento;
+            clienteDb.Oficio = clienteEditado.Oficio;
+            clienteDb.Celular = clienteEditado.Celular;
+            clienteDb.Telefono = clienteEditado.Telefono;
+            clienteDb.Ciudad = clienteEditado.Ciudad;
+            clienteDb.DirDomicilio = clienteEditado.DirDomicilio;
+            clienteDb.BarrioDomicilio = clienteEditado.BarrioDomicilio;
+            clienteDb.DirCobro = clienteEditado.DirCobro;
+            clienteDb.BarrioCobro = clienteEditado.BarrioCobro;
+            clienteDb.NotasGenerales = clienteEditado.NotasGenerales;
+            clienteDb.CupoDisponible = clienteEditado.CupoDisponible;
 
-            clienteExistente.NombreCompleto = cliente.NombreCompleto;
-            clienteExistente.Telefono = cliente.Telefono;
-            clienteExistente.Celular = cliente.Celular;
-            clienteExistente.Ciudad = cliente.Ciudad;
-
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            try
+            {
+                await _context.SaveChangesAsync();
+                return NoContent(); // Devuelve el 204 con éxito total
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!_context.Clientes.Any(e => e.Id == id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
         }
 
         // DELETE: api/clientes/5

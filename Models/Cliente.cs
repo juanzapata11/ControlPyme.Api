@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace ControlPyme.Api.Models
 {
@@ -19,5 +20,17 @@ namespace ControlPyme.Api.Models
         public string? BarrioCobro { get; set; }
         public string? NotasGenerales { get; set; }
         public int UsuarioId { get; set; }
+
+        
+        [JsonPropertyName("CupoDisponible")]
+        public decimal CupoDisponible { get; set; }
+        
+        [NotMapped]
+        [JsonPropertyName("SaldoPendiente")]
+        public decimal SaldoPendiente { get; set; }
+
+        // Propiedad calculada que ayuda a la UI a saber si muestra alertas en rojo
+        [JsonIgnore] // Evita que se intente enviar o serializar este campo hacia la API
+        public bool TieneSaldoPendiente => SaldoPendiente > 0;
     }
 }
