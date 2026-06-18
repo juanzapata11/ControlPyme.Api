@@ -5,14 +5,12 @@ namespace ControlPyme.Api.Data
 {
     public class AppDbContext : DbContext
     {
-        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
-        {
-
-        }
-
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options){}
         public DbSet<Cliente> Clientes { get; set; }
         public DbSet<Producto> Productos { get; set; }
         public DbSet<Factura> Facturas { get; set; }
         public DbSet<DetalleFactura> DetalleFacturas { get; set; }
+        public DbSet<CuentaPorCobrar> CuentasPorCobrar { get; set; }
+        public DbSet<Abono> Abonos { get; set; }
     }
 }

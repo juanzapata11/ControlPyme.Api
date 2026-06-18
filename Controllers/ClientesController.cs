@@ -17,23 +17,37 @@ namespace ControlPyme.Api.Controllers
             _context = context;
         }
 
-        // GET: api/clientes
+        //// GET: api/clientes
+        //[HttpGet]
+        //public async Task<ActionResult<IEnumerable<Cliente>>> GetClientes()
+        //{
+        //    return await _context.Clientes.ToListAsync();
+        //}
+
+        // GET: api/Clientes
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Cliente>>> GetClientes()
         {
-            return await _context.Clientes.ToListAsync();
-        }
+            // 1. Traemos la lista de clientes tal como están en la base de datos (con su CupoDisponible real)
+            var clientes = await _context.Clientes.ToListAsync();
 
-        // GET: api/clientes/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Cliente>> GetCliente(int id)
-        {
-            var cliente = await _context.Clientes.FindAsync(id);
+            // 2. Traemos todas las cuentas por cobrar que tengan deudas activas
+            var cxcPendientes = await _context.CuentasPorCobrar
+                .Where(c => c.Estado == "PENDIENTE")
+                .ToListAsync();
 
-            if (cliente == null)
-                return NotFound();
+            // 3. Calculamos el SaldoPendiente para inyectarlo en la propiedad [NotMapped]
+            foreach (var cliente in clientes)
+            {
+                // Sumamos el saldo actual de todas las facturas que deba este cliente
+                cliente.SaldoPendiente = cxcPendientes
+                    .Where(c => c.ClienteId == cliente.Id)
+                    .Sum(c => c.SaldoActual);
 
-            return cliente;
+                // NOTA: No tocamos cliente.CupoDisponible aquí porque ya viene con el valor real y actualizado desde tu base de datos SQL Server.
+            }
+
+            return clientes;
         }
 
         // POST: api/clientes
@@ -43,7 +57,7 @@ namespace ControlPyme.Api.Controllers
             _context.Clientes.Add(cliente);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetCliente), new { id = cliente.Id }, cliente);
+            return CreatedAtAction(nameof(GetClientes), new { id = cliente.Id }, cliente);
         }
 
         // PUT: api/clientes/5

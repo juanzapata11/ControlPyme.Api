@@ -1,17 +1,14 @@
-﻿using ControlPyme.Api.Data;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using ControlPyme.Api.Models; // Ajusta al namespace real de tus modelos compartidos
-using System;
-using System.Threading.Tasks;
+using ControlPyme.Api.Data;
+using ControlPyme.Api.Models;
 
 namespace ControlPyme.Api.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
     public class FacturasController : ControllerBase
     {
-        //private readonly ApplicationDbContext _context; // Tu DbContext de Entity Framework
         private readonly AppDbContext _context;
 
         public FacturasController(AppDbContext context)
@@ -19,7 +16,6 @@ namespace ControlPyme.Api.Controllers
             _context = context;
         }
 
-        // POST: api/Facturas
         [HttpPost]
         public async Task<IActionResult> CrearFactura([FromBody] Factura nuevaFactura)
         {
@@ -35,48 +31,68 @@ namespace ControlPyme.Api.Controllers
                 // 1. Forzar la fecha y hora exacta del servidor
                 nuevaFactura.FechaVenta = DateTime.Now;
 
-                // 2. REGLA DE ORO: Validamos y descontamos stock ANTES de guardar la factura.
-                // Así no modificamos propiedades de 'detalle' que puedan corromper el tracking de EF.
+                // 2. Validamos y descontamos stock en el inventario
                 foreach (var detalle in nuevaFactura.Detalles)
                 {
-                    // Buscamos el producto en la base de datos
                     var producto = await _context.Productos.FindAsync(detalle.ProductoId);
                     if (producto == null)
                     {
                         throw new Exception($"El producto con ID {detalle.ProductoId} no existe en el inventario.");
                     }
 
-                    // Validamos existencias en la peluquería
                     if (producto.StockActual < detalle.Cantidad)
                     {
                         throw new Exception($"Stock insuficiente para {producto.Nombre}. Disponible: {producto.StockActual}, Solicitado: {detalle.Cantidad}");
                     }
 
-                    // Descontamos las unidades del inventario
                     producto.StockActual -= detalle.Cantidad;
                     _context.Entry(producto).State = EntityState.Modified;
                 }
 
-                // 3. Si la venta es a Crédito, afectamos la cartera del cliente inmediatamente
+                // 3. GUARDADO INTERMEDIO DE LA FACTURA
+                // Necesitamos agregar la factura primero para que SQL Server genere su ID autonumérico
+                _context.Facturas.Add(nuevaFactura);
+                await _context.SaveChangesAsync();
+
+                // 4. Si la venta es a Crédito, afectamos la cartera del cliente y CREAMOS LA CXC
                 if (nuevaFactura.TipoPago == "CREDITO")
                 {
                     var cliente = await _context.Clientes.FindAsync(nuevaFactura.ClienteId);
-                    if (cliente != null)
+                    if (cliente == null)
                     {
-                        cliente.SaldoPendiente += nuevaFactura.TotalPagar;
-                        _context.Entry(cliente).State = EntityState.Modified;
+                        throw new Exception("El cliente especificado para la venta a crédito no existe.");
                     }
+
+                    // Validamos si el cliente tiene cupo disponible para esta compra
+                    if (nuevaFactura.TotalPagar > cliente.CupoDisponible)
+                    {
+                        throw new Exception($"Crédito rechazado. El total de la venta (${nuevaFactura.TotalPagar:#,##0}) supera el cupo disponible del cliente (${cliente.CupoDisponible:#,##0}).");
+                    }
+
+                    // Afectamos los saldos globales del cliente
+                    cliente.SaldoPendiente += nuevaFactura.TotalPagar;
+                    cliente.CupoDisponible -= nuevaFactura.TotalPagar;
+                    _context.Entry(cliente).State = EntityState.Modified;
+
+                    // 🔥 AQUÍ NACE LA CUENTA POR COBRAR ASOCIADA A ESTA FACTURA:
+                    var nuevaCxc = new CuentaPorCobrar
+                    {
+                        ClienteId = nuevaFactura.ClienteId,
+                        FacturaId = nuevaFactura.Id, // Usamos el ID recién generado por SQL Server
+                        FechaEmision = DateTime.Now,
+                        FechaVencimiento = DateTime.Now.AddDays(30), // Plazo estándar de 30 días para las peluquerías
+                        ValorTotal = nuevaFactura.TotalPagar,
+                        SaldoActual = nuevaFactura.TotalPagar, // Inicia debiendo el 100%
+                        Estado = "PENDIENTE"
+                    };
+
+                    _context.CuentasPorCobrar.Add(nuevaCxc);
                 }
 
-                // 4. GUARDADO MAESTRO: Agregamos la factura completa al contexto.
-                // EF se encargará de insertar la Factura, generar su Id, asignárselo a los detalles
-                // e insertar cada DetalleFactura con su respectivo ID autonumérico en un solo paso físico.
-                _context.Facturas.Add(nuevaFactura);
-
-                // Guardamos todo de forma masiva y segura
+                // 5. Guardamos de forma definitiva (Modificaciones de Cliente, Stock y Nueva CXC)
                 await _context.SaveChangesAsync();
 
-                // Confirmamos la transacción en SQL Server
+                // Confirmamos la transacción limpia en SQL Server
                 await transaccion.CommitAsync();
 
                 return CreatedAtAction(nameof(CrearFactura), new { id = nuevaFactura.Id }, nuevaFactura);
