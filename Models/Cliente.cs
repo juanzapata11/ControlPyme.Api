@@ -32,5 +32,6 @@ namespace ControlPyme.Api.Models
         // Propiedad calculada que ayuda a la UI a saber si muestra alertas en rojo
         [JsonIgnore] // Evita que se intente enviar o serializar este campo hacia la API
         public bool TieneSaldoPendiente => SaldoPendiente > 0;
+        public int OrdenRuta { get; set; }
     }
 }

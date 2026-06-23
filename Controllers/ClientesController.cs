@@ -17,6 +17,74 @@ namespace ControlPyme.Api.Controllers
             _context = context;
         }
 
+        [HttpPut("{id}/asignar-ruta")]
+        public async Task<IActionResult> AsignarPosicionRuta(int id, [FromQuery] string estrategia, [FromQuery] int? clienteReferenciaId)
+        {
+            using var transaccion = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                var clienteNuevo = await _context.Clientes.FindAsync(id);
+                if (clienteNuevo == null) return NotFound("Cliente no encontrado.");
+
+                var todosLosClientes = await _context.Clientes
+                    .Where(c => c.Id != id)
+                    .OrderBy(c => c.OrdenRuta)
+                    .ToListAsync();
+
+                int nuevoOrden = 1;
+
+                switch (estrategia.ToUpper().Trim())
+                {
+                    case "PRIMERO":
+                        nuevoOrden = 1;
+                        // Empujamos a todos los demás hacia adelante
+                        foreach (var c in todosLosClientes) { c.OrdenRuta++; }
+                        break;
+
+                    case "ULTIMO":
+                        int maxOrden = todosLosClientes.Any() ? todosLosClientes.Max(c => c.OrdenRuta) : 0;
+                        nuevoOrden = maxOrden + 1;
+                        break;
+
+                    case "MISMA_ULTIMO":
+                        nuevoOrden = todosLosClientes.Any() ? todosLosClientes.Max(c => c.OrdenRuta) : 1;
+                        if (nuevoOrden == 0) nuevoOrden = 1;
+                        break;
+
+                    case "DESPUES_DE":
+                        if (clienteReferenciaId == null) return BadRequest("Debe especificar un cliente de referencia.");
+
+                        var clienteRef = todosLosClientes.FirstOrDefault(c => c.Id == clienteReferenciaId);
+                        if (clienteRef == null) return BadRequest("El cliente de referencia no existe.");
+
+                        nuevoOrden = clienteRef.OrdenRuta + 1;
+
+                        // Empujamos solo a los que estaban después del cliente de referencia
+                        foreach (var c in todosLosClientes.Where(c => c.OrdenRuta > clienteRef.OrdenRuta))
+                        {
+                            c.OrdenRuta++;
+                        }
+                        break;
+
+                    default:
+                        return BadRequest("Estrategia de ruteo no válida.");
+                }
+
+                // Asignamos el orden calculado al cliente nuevo
+                clienteNuevo.OrdenRuta = nuevoOrden;
+
+                await _context.SaveChangesAsync();
+                await transaccion.CommitAsync();
+
+                return Ok(new { mensaje = "Ruta organizada con éxito", ordenAsignado = nuevoOrden });
+            }
+            catch (Exception ex)
+            {
+                await transaccion.RollbackAsync();
+                return StatusCode(500, $"Error al organizar ruta: {ex.Message}");
+            }
+        }
+
         //// GET: api/clientes
         //[HttpGet]
         //public async Task<ActionResult<IEnumerable<Cliente>>> GetClientes()

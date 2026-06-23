@@ -54,8 +54,11 @@ namespace ControlPyme.Api.Controllers
                 _context.Facturas.Add(nuevaFactura);
                 await _context.SaveChangesAsync();
 
-                // 4. Si la venta es a Crédito, afectamos la cartera del cliente y CREAMOS LA CXC
-                if (nuevaFactura.TipoPago == "CREDITO")
+                // 🔥 BLINDAJE: Limpiamos el texto de espacios y mayúsculas para evitar fallas de comparación
+                string metodoPagoLimpio = nuevaFactura.TipoPago?.ToUpper().Trim() ?? "CONTADO";
+
+                // 4. Si la venta es a Crédito, afectamos la cartera del cliente, CREAMOS LA CXC y ORGANIZAMOS RUTA
+                if (metodoPagoLimpio == "CREDITO")
                 {
                     var cliente = await _context.Clientes.FindAsync(nuevaFactura.ClienteId);
                     if (cliente == null)
@@ -74,7 +77,7 @@ namespace ControlPyme.Api.Controllers
                     cliente.CupoDisponible -= nuevaFactura.TotalPagar;
                     _context.Entry(cliente).State = EntityState.Modified;
 
-                    // 🔥 AQUÍ NACE LA CUENTA POR COBRAR ASOCIADA A ESTA FACTURA:
+                    // AQUÍ NACE LA CUENTA POR COBRAR ASOCIADA A ESTA FACTURA:
                     var nuevaCxc = new CuentaPorCobrar
                     {
                         ClienteId = nuevaFactura.ClienteId,
@@ -87,12 +90,56 @@ namespace ControlPyme.Api.Controllers
                     };
 
                     _context.CuentasPorCobrar.Add(nuevaCxc);
+
+                    // =========================================================================
+                    // 🚀 NUEVA LÓGICA DE ENRUTAMIENTO GEOGRÁFICO AUTOMÁTICO
+                    // =========================================================================
+                    string estrategia = nuevaFactura.EstrategiaRuta ?? "ULTIMO";
+                    int? referenciaId = nuevaFactura.ClienteReferenciaId;
+
+                    // Obtenemos todos los DEMÁS clientes ordenados por su posición de ruta actual
+                    var todosLosClientes = await _context.Clientes
+                        .Where(c => c.Id != nuevaFactura.ClienteId)
+                        .OrderBy(c => c.OrdenRuta)
+                        .ToListAsync();
+
+                    int nuevoOrden = 1;
+
+                    if (estrategia == "PRIMERO")
+                    {
+                        nuevoOrden = 1;
+                        // Desplazamos a todos un puesto hacia adelante para liberar el primer lugar
+                        foreach (var c in todosLosClientes) { c.OrdenRuta++; }
+                    }
+                    else if (estrategia == "DESPUES_DE" && referenciaId.HasValue)
+                    {
+                        var cRef = todosLosClientes.FirstOrDefault(c => c.Id == referenciaId.Value);
+                        if (cRef != null)
+                        {
+                            nuevoOrden = cRef.OrdenRuta + 1;
+                            // Desplazamos solo a los que queden rezagados detrás del cliente de referencia
+                            foreach (var c in todosLosClientes.Where(x => x.OrdenRuta > cRef.OrdenRuta))
+                            {
+                                c.OrdenRuta++;
+                            }
+                        }
+                    }
+                    else // Caso: "ULTIMO" o "MISMA_ULTIMO"
+                    {
+                        int max = todosLosClientes.Any() ? todosLosClientes.Max(x => x.OrdenRuta) : 0;
+                        nuevoOrden = estrategia == "MISMA_ULTIMO" ? (max == 0 ? 1 : max) : max + 1;
+                    }
+
+                    // Asignamos el puesto geográfico calculado al cliente dueño de esta factura
+                    cliente.OrdenRuta = nuevoOrden;
+                    _context.Entry(cliente).State = EntityState.Modified;
+                    // =========================================================================
                 }
 
-                // 5. Guardamos de forma definitiva (Modificaciones de Cliente, Stock y Nueva CXC)
+                // 5. Guardamos de forma definitiva (Modificaciones de Cliente, Stock, Nueva CXC y Orden de Ruta)
                 await _context.SaveChangesAsync();
 
-                // Confirmamos la transacción limpia en SQL Server
+                // Confirmamos la transacción limpia en SQL Server de manera segura
                 await transaccion.CommitAsync();
 
                 return CreatedAtAction(nameof(CrearFactura), new { id = nuevaFactura.Id }, nuevaFactura);

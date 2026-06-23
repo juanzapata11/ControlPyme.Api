@@ -12,5 +12,7 @@
 
         // Propiedad de navegación: Una factura contiene múltiples filas de detalle
         public List<DetalleFactura> Detalles { get; set; } = new List<DetalleFactura>();
+        public string? EstrategiaRuta { get; set; }
+        public int? ClienteReferenciaId { get; set; }
     }
 }
