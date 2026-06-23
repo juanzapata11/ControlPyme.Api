@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ControlPyme.Api.Models
 {
+    //
     [Table("Abonos")]
     public class Abono
     {
