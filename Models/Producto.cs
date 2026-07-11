@@ -6,6 +6,7 @@
         public string Nombre { get; set; } = string.Empty;
         public string Descripcion { get; set; } = string.Empty;
         public decimal PrecioVenta { get; set; }
+        public decimal PrecioCompra { get; set; }
         public int StockActual { get; set; }
         public int StockMinimo { get; set; }
         public bool EsCreditoPermitido { get; set; } = true;
