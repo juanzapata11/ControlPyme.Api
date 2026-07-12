@@ -11,5 +11,5 @@
         public int StockMinimo { get; set; }
         public bool EsCreditoPermitido { get; set; } = true;
         public string CodigoBarras { get; set; } = string.Empty;
-    }
+    }//
 }
